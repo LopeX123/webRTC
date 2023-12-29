@@ -6,28 +6,25 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-app.use(express.static('public'));
-
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/public/index.html');
-});
-
 const PORT = process.env.PORT || 3000;
+
 server.listen(PORT, () => {
-    console.log(`Servidor en http://localhost:${PORT}`);
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-const peers = {};
+io.on('connection', (socket) => {
+    console.log('New user connected');
+    
+    socket.on('join-room', (roomId) => {
+        const role = roomId.role;
+        if (role === 'student') {
+            io.emit('student-connected', socket.id);
+        } else if (role === 'admin') {
+            io.emit('admin-connected', socket.id);
+        }
+    });
 
-io.on('connection', socket => {
-    socket.on('join-room', roomId => {
-        socket.join(roomId);
-        socket.to(roomId).broadcast.emit('user-connected', socket.id);
-
-        socket.on('disconnect', () => {
-            socket.to(roomId).broadcast.emit('user-disconnected', socket.id);
-            delete peers[socket.id];
-        });
+    socket.on('disconnect', () => {
+        console.log('User disconnected');
     });
 });
-

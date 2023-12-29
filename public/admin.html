@@ -7,8 +7,12 @@
 </head>
 <body>
     <h1>Welcome Admin!</h1>
-    <p id="studentsCount">Students Connected: 0</p>
+    <p>Students Connected: <span id="studentsCount">0</span></p>
+    <p>Admins Connected: <span id="adminsCount">0</span></p>
     <div id="studentsVideoContainer"></div>
+    <div id="adminsVideoContainer"></div>
+    <button id="simulateStudentConnect">Simulate Student Connect</button>
+    <button id="simulateAdminConnect">Simulate Admin Connect</button>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="admin.js"></script>

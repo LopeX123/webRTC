@@ -1,113 +1,78 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const socket = io();
-    const localVideo = document.getElementById('localVideo');
+    const socket = io(); // Asegúrate de tener configurado el socket.io como en tu configuración.
     const studentsVideoContainer = document.getElementById('studentsVideoContainer');
-    const micButton = document.getElementById('micButton');
-    const camButton = document.getElementById('camButton');
-    const roleForm = document.getElementById('roleForm');
-    const startButton = document.getElementById('startButton');
-    let localStream;
-    let peers = {}; // Objeto para mantener las conexiones con los estudiantes
-
-    startButton.addEventListener('click', () => {
-        const selectedRole = document.getElementById('role').value;
-
-        if (selectedRole === 'student') {
-            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                .then(stream => {
-                    localVideo.srcObject = stream;
-                    localStream = stream;
-
-                    socket.emit('join-room', 'room1');
-
-                    socket.on('user-connected', userId => {
-                        connectToNewUser(userId, stream);
-                    });
-
-                    roleForm.style.display = 'none';
-                    localVideo.style.display = 'block';
-                    micButton.style.display = 'block';
-                    camButton.style.display = 'block';
-                })
-                .catch(error => console.error('Error accessing media devices:', error));
-        } else if (selectedRole === 'admin') {
-            window.location.href = 'admin.html'; // Redirige a la página de admin
-            setupAdminSocketEvents();
-        }
+    const adminsVideoContainer = document.getElementById('adminsVideoContainer');
+    const studentsCountElement = document.getElementById('studentsCount');
+    const adminsCountElement = document.getElementById('adminsCount');
+    let peers = {};
+    
+    socket.on('connect', () => {
+        console.log('Connected to server'); // Registro para verificar la conexión
     });
 
-    micButton.addEventListener('click', () => {
-        const audioTracks = localStream.getAudioTracks();
-        audioTracks.forEach(track => {
-            track.enabled = !track.enabled;
-        });
-        micButton.innerText = audioTracks[0].enabled ? 'Mute' : 'Unmute';
+    document.getElementById('simulateStudentConnect').addEventListener('click', () => {
+        const simulatedStudentId = 'simulatedStudentId'; // Puedes generar un ID único aquí si lo deseas
+        socket.emit('student-connected', simulatedStudentId);
+        peers[simulatedStudentId] = {}; // Añadir el estudiante simulado a la lista de pares
+        updateStudentsCount();
     });
 
-    camButton.addEventListener('click', () => {
-        const videoTracks = localStream.getVideoTracks();
-        videoTracks.forEach(track => {
-            track.enabled = !track.enabled;
-        });
-        camButton.innerText = videoTracks[0].enabled ? 'Stop Camera' : 'Start Camera';
+    document.getElementById('simulateAdminConnect').addEventListener('click', () => {
+        const simulatedAdminId = 'simulatedAdminId'; // Puedes generar un ID único aquí si lo deseas
+        socket.emit('admin-connected', simulatedAdminId);
+        peers[simulatedAdminId] = {}; // Añadir el administrador simulado a la lista de pares
+        updateAdminsCount();
     });
+    
+    socket.on('student-connected', userId => {
+        console.log('Student connected:', userId); // Registro para verificar la conexión de estudiantes
 
-    function connectToNewUser(userId, stream) {
-        const call = peer.call(userId, stream);
         const video = document.createElement('video');
+        video.autoplay = true;
+        video.playsinline = true;
 
-        call.on('stream', userVideoStream => {
-            addVideoStream(video, userVideoStream);
-        });
+        const peer = new Peer();
+        const call = peer.call(userId, null);
 
-        call.on('close', () => {
-            video.remove();
-            updateStudentsCount(); // Actualiza la cuenta al cerrar una conexión
+        call.on('stream', studentVideoStream => {
+            video.srcObject = studentVideoStream;
+            studentsVideoContainer.appendChild(video);
         });
 
         peers[userId] = call;
-        updateStudentsCount(); // Actualiza la cuenta al establecer una conexión
-    }
+        updateStudentsCount();
+    });
 
-    function addVideoStream(video, stream) {
-        video.srcObject = stream;
-        video.addEventListener('loadedmetadata', () => {
-            video.play();
+    // Escuchar admins conectados
+    socket.on('admin-connected', adminId => {
+        console.log('Admin connected:', adminId); // Registro para verificar la conexión de administradores
+
+        const video = document.createElement('video');
+        video.autoplay = true;
+        video.playsinline = true;
+
+        const peer = new Peer();
+        const call = peer.call(adminId, null);
+
+        call.on('stream', adminVideoStream => {
+            video.srcObject = adminVideoStream;
+            adminsVideoContainer.appendChild(video);
         });
-        studentsVideoContainer.appendChild(video);
-        updateStudentsCount(); // Actualiza la cuenta al agregar un video
-    }
 
+        peers[adminId] = call;
+        updateAdminsCount();
+    });
+
+    // Actualizar la cantidad de estudiantes conectados
     function updateStudentsCount() {
-        const studentsCountElement = document.getElementById('studentsCount');
-        const studentsCount = Object.keys(peers).length;
-        studentsCountElement.innerText = `Students Connected: ${studentsCount}`;
+        const studentsCount = Object.keys(peers).filter(id => !id.startsWith('admin')).length;
+        studentsCountElement.innerText = studentsCount;
+        console.log('Updated student count:', studentsCount); // Registro para verificar el contador de estudiantes
     }
 
-    function setupAdminSocketEvents() {
-        socket.on('user-connected', userId => {
-            const call = peer.call(userId, localStream);
-            const video = document.createElement('video');
-
-            call.on('stream', userVideoStream => {
-                addVideoStream(video, userVideoStream);
-            });
-
-            call.on('close', () => {
-                video.remove();
-                updateStudentsCount(); // Actualiza la cuenta al cerrar una conexión
-            });
-
-            peers[userId] = call;
-            updateStudentsCount(); // Actualiza la cuenta al establecer una conexión
-        });
-
-        socket.on('user-disconnected', userId => {
-            if (peers[userId]) {
-                peers[userId].close();
-                delete peers[userId];
-                updateStudentsCount(); // Actualiza la cuenta al cerrar una conexión
-            }
-        });
+    function updateAdminsCount() {
+        const adminsCount = Object.keys(peers).filter(id => id.startsWith('admin')).length;
+        adminsCountElement.innerText = adminsCount;
+        console.log('Updated admin count:', adminsCount); // Registro para verificar el contador de administradores
     }
 });

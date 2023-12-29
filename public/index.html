@@ -6,22 +6,15 @@
     <title>WebRTC Example</title>
 </head>
 <body>
-    <h1>WebRTC Example</h1>
-    <form id="roleForm">
-        <label for="role">Select your role:</label>
-        <select id="role" name="role">
-            <option value="student">Student</option>
-            <option value="admin">Admin</option>
-        </select>
-        <button type="button" id="startButton">Start</button>
-    </form>
-    <video id="localVideo" autoplay playsinline style="display:none;"></video>
-    <video id="remoteVideo" autoplay playsinline></video>
-
-    <button id="micButton" style="display:none;">Mute</button>
-    <button id="camButton" style="display:none;">Stop Camera</button>
+    <h1>Welcome to WebRTC Example</h1>
+    <label for="role">Select Role:</label>
+    <select id="role">
+        <option value="admin">Admin</option>
+        <option value="student">Student</option>
+    </select>
+    <button id="joinButton">Join</button>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="main.js"></script>
+    <script src="main.js"></script> <!-- Agregar el archivo main.js -->
 </body>
 </html>
