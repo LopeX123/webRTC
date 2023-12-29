@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 document.addEventListener('DOMContentLoaded', () => {
     const socket = io(); // Asegúrate de tener configurado el socket.io como en tu configuración.
     const studentsVideoContainer = document.getElementById('studentsVideoContainer');
@@ -11,14 +13,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('simulateStudentConnect').addEventListener('click', () => {
-        const simulatedStudentId = 'simulatedStudentId'; // Puedes generar un ID único aquí si lo deseas
+        const simulatedStudentId = uuidv4();
+        console.log(simulatedStudentId);
         socket.emit('student-connected', simulatedStudentId);
         peers[simulatedStudentId] = {}; // Añadir el estudiante simulado a la lista de pares
         updateStudentsCount();
     });
 
     document.getElementById('simulateAdminConnect').addEventListener('click', () => {
-        const simulatedAdminId = 'simulatedAdminId'; // Puedes generar un ID único aquí si lo deseas
+        const simulatedAdminId = uuidv4();
+        console.log(simulatedAdminId);
         socket.emit('admin-connected', simulatedAdminId);
         peers[simulatedAdminId] = {}; // Añadir el administrador simulado a la lista de pares
         updateAdminsCount();
