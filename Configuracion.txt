@@ -1,4 +1,8 @@
+-dependencias
 npm install socket.io@2.4.0
 npm install express socket.io
 npm install simple-peer peer
 npm install uuid
+
+-ejecutar
+node src/server.js
